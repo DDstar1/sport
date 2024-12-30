@@ -1,0 +1,1 @@
+sporty_demo_url = 'https://aviator-demo.spribegaming.com/?currency=USD&operator=demo&jurisdiction=CW&lang=EN&return_url=https:%2F%2Fspribe.co%2Fgames&user=18825&token=ak0DBYs5Y7NfVFeaveWD2hss2WAf8mfg'
