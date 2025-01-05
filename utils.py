@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import json
 import os
 import traceback
 import requests
@@ -11,7 +12,7 @@ import aiohttp
 import asyncio
 import pyautogui
 
-BASE_DIR = r"C:\Users\Administrator\Desktop\sporty-main"
+BASE_DIR = r"C:\Users\Administrator\Desktop\sporty-main (080) test"
 
 
 def login(driver, phone, paswd):
@@ -46,7 +47,7 @@ def make_sure_website_up(driver):
 def get_multipliers(driver):
     multiplier_list = []
 
-    multipliers = driver.find_elements(By.CSS_SELECTOR, "div.payouts-block app-bubble-multiplier")[:2]
+    multipliers = driver.find_elements(By.CSS_SELECTOR, "div.payouts-block app-bubble-multiplier")[:3]
     for e in multipliers:
         text_num = e.text.split('x')[0]
         if text_num != "":
@@ -81,27 +82,57 @@ async def send_telegram_msg(msg):
     except Exception as e:
         print(e)
 
+
+# def send_telegram_msg_2(msg):
+#     token = "7383529443:AAHztCuaDFvQ2_KU9Vl7dqsQ82E-6jLsqq4"
+#     # gc_id = '6966902490'
+#     gc_id = '-1002160352322'
+#     url = f"https://api.telegram.org/bot{token}/sendMessage?chat_id={gc_id}&text={msg}&allow_sending_without_reply=True"
+
+#     requests.get(url)
+
+
+
 def send_telegram_msg_2(msg):
     token = "7383529443:AAHztCuaDFvQ2_KU9Vl7dqsQ82E-6jLsqq4"
-    # gc_id = '6966902490'
     gc_id = '-1002160352322'
-    url = f"https://api.telegram.org/bot{token}/sendMessage?chat_id={gc_id}&text={msg}&allow_sending_without_reply=True"
+    
+    send_url = f"https://api.telegram.org/bot{token}/sendMessage"
+    pin_url = f"https://api.telegram.org/bot{token}/pinChatMessage"
+    
+    try:
+        # Send the message
+        send_response = requests.post(send_url, json={"chat_id": gc_id, "text": msg, "allow_sending_without_reply": True})
+        send_response_data = send_response.json()
+        message_id = send_response_data['result']['message_id']
+        
+        # Pin the message
+        pin_response = requests.post(pin_url, json={"chat_id": gc_id, "message_id": message_id, "disable_notification": False})
+        return pin_response.json()
+    except Exception as e:
+        print(e)
 
-    requests.get(url)
-
-   
    
 
 
 
 def input_stake(driver, num):
     try:
+        # Locate the input field
         stake_input = driver.find_element(By.CSS_SELECTOR, "app-spinner input")
+        current_value = stake_input.get_attribute("value")
+
+        # If the current value matches the desired value, return early
+        if float(current_value) == float(num):
+            print('Stake already correct')
+            return
+        
+        # Otherwise, clear and set the new value
         driver.execute_script("arguments[0].select();", stake_input)
         stake_input.send_keys(f"{num}")
     except Exception as e:
-        # print(traceback.format_exc())
-        print(f"error from input_stake, Element not interactable")
+        print(f"error from input_stake, Element not interactable: {e}")
+
 
 
 
@@ -176,7 +207,6 @@ def make_sure_auto_close(driver, sl=2):
 def click_bet_button(driver):
     try:
         while True:
-            time.sleep(1)
             # Wait for the buttons to be present
             buttons = WebDriverWait(driver, 30).until(
                 EC.presence_of_all_elements_located((By.CSS_SELECTOR, "button.btn.btn-success.bet.ng-star-inserted"))
@@ -189,8 +219,10 @@ def click_bet_button(driver):
                     print("Element click intercepted.")
                     # continue
                 # time.sleep(10)
-            else:
-                break
+                else:
+                    pass
+                    break
+                    
     except Exception as e:
         print(f"Error from click_bet_button: {e}")
        
@@ -251,18 +283,6 @@ def is_last_2_bet_history_set(list):
         else:
             print("The times are more than 5 minutes apart.")
             return False
-        
-# def old_set(list):
-#     time1 = datetime.strptime(list[0], '%H:%M')
-#     now = datetime.now().strftime('%H:%M')
-#     time_now = datetime.strptime(now, '%H:%M')
-#     time_difference = abs(time_now - time1)
-
-#     # Check if the difference is more than 5 minutes
-#     if time_difference > timedelta(minutes=30):
-#         input_stake(driver, num=stakes[stake_index])
-#         make_sure_auto_close(driver)
-#         click_bet_button(driver)
 
 
 def get_money_balance(driver):
@@ -337,27 +357,75 @@ def has_mins_passed(last_bet_time, check_secs):
         return False
 
 
-def take_screenshot(driver):
-        screenshot = driver.get_screenshot_as_png()
-        # Save the screenshot to the current working directory
-        screenshot_path = os.path.join(os.getcwd(), f"{BASE_DIR}\\screenshot.png")
 
+async def screenshot_and_send_to_telegram(driver, msg_id=None ,caption=""):
+    try:
+        # Take a screenshot of the browser
+        screenshot = driver.get_screenshot_as_png()
+        screenshot_path = os.path.join(os.getcwd(), "screenshot.png")
         with open(screenshot_path, "wb") as file:
             file.write(screenshot)
+        # screenshot = pyautogui.screenshot()
+        # screenshot_path = os.path.join(os.getcwd(), "screenshot.png")
+        # screenshot.save(screenshot_path)
 
         print(f"Screenshot saved to: {screenshot_path}")
 
+        # Send the screenshot to Telegram
+        token = "7383529443:AAHztCuaDFvQ2_KU9Vl7dqsQ82E-6jLsqq4"
+        gc_id = '-1002160352322'
+        url = f"https://api.telegram.org/bot{token}/sendPhoto"
+
+        # Asynchronous HTTP request to send the photo
+        async with aiohttp.ClientSession() as session:
+            with open(screenshot_path, 'rb') as photo:
+                payload = {'chat_id': gc_id,
+                           'photo': photo,  
+                           "caption": caption or "",
+                            "allow_sending_without_reply": 'true',}
+                if msg_id:
+                    payload["reply_to_message_id"] = f"{msg_id}"
+               
+                async with session.post(url, data=payload ) as response:
+                    if response.status == 200:
+                        print("Screenshot successfully sent to Telegram!")
+                    
+                    else:
+                        print(f"Failed to send screenshot to Telegram. Error: {await response.text()}")
+
+    except Exception as e:
+        print(f"An error occurred while taking a screenshot or sending it to Telegram: {e}")
+        await send_telegram_msg(f"Error sending Screenshot to Telegram: {str(e)}")
 
 
-def write_to_next_stake_index(data):
-    with open("next_stake_index.txt", "w") as file:
-        file.write(str(data))
 
-def read_next_stake_index():
-    with open("next_stake_index.txt", "r") as file:
-        content = file.read().strip()
+def is_new_tele_cmd(last_update_id):
     try:
-        return int(content) if content.isdigit() else float(content)
-    except ValueError:
-        raise ValueError(f"Invalid numeric value in file: {content}")
+        token = "7383529443:AAHztCuaDFvQ2_KU9Vl7dqsQ82E-6jLsqq4"
+        url = f"https://api.telegram.org/bot{token}/getUpdates?limit=50"
+
+        response = requests.get(url, verify=False).text
+        PyRes = json.loads(response)
+
+
+        # sets latest ID into database latestID table if new update is greater
+        ResultBody = PyRes["result"][-1]
+
+        print(ResultBody)
+
+
+        new_updateID = int(ResultBody["update_id"])
+        message = ResultBody["message"]["text"]
+        message_id = ResultBody["message"]["message_id"]
+
+
+        if(last_update_id == new_updateID):
+            return False
+        elif(message in ['/getresults','/getresults@sporty_7_bot']):
+            with open("logs\\update_id.txt", "w") as file:
+                file.write(str(new_updateID))
+            return { 'msg_id':message_id }
+    except Exception as e:
+        print(f"Error getting latest Id {e}")
+        return False
 
