@@ -7,7 +7,7 @@ import traceback
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import db
-from utils import BASE_DIR, login, check_for_invalid_input_stake, take_screenshot, click_bet_button, click_cancel_button, get_bet_history_losses, get_multipliers, has_mins_passed, input_stake, get_trade_elements, make_sure_auto_close, make_sure_website_up, send_telegram_msg, get_money_balance,read_next_stake_index, write_to_next_stake_index,is_multipliers_safe
+from utils import BASE_DIR, is_new_tele_cmd, login, check_for_invalid_input_stake, screenshot_and_send_to_telegram, click_bet_button, click_cancel_button, get_bet_history_losses, get_multipliers, has_mins_passed, input_stake, get_trade_elements, make_sure_auto_close, make_sure_website_up, send_telegram_msg, get_money_balance,is_multipliers_safe, send_telegram_msg_2
 
 
 import asyncio
@@ -82,11 +82,9 @@ async def main_loop():
 
     # Set up Chrome options
     chrome_options = Options()
-    # chrome_options.add_argument("--headless")  # To run Chrome in headless mode (no GUI)
+    chrome_options.add_argument("--headless")  # To run Chrome in headless mode (no GUI)
 
     driver = webdriver.Chrome(options=chrome_options)
-
-
     # Get the screen width and height
     screen_width = driver.execute_script("return window.screen.width;")
     screen_height = driver.execute_script("return window.screen.height;")
@@ -102,6 +100,8 @@ async def main_loop():
     # input("login now ?")
     time.sleep(3)
     login(driver, 8151725194, 'spcapmarvel7S')
+    # login(driver, 7052109432, 'spcapmarvel7S')
+    
 
 
 
@@ -114,17 +114,10 @@ async def main_loop():
     old_multipliers = []
     old_bet_his_text = None
     can_trade = True
-    # stakes = [30,210, 1000, 4200]
-    # stakes = [10, 20, 60, 180, 300]
-    # stakes = [75, 375, 2250]
-    # stakes = [10,10,10,10]
 
-    # stakes = [20,30, 60]
-    # stakes = [10,11,22,45]
-    # initial_stake = [10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,190,200,210,220,230,240,250,260,270,280,290,300,310,320,330]
-    # initial_stake = [10, 11, 12, 13, 14, 15, 16, 17]
-    # initial_stake = [10,20,60,180,540]
-    initial_stake = [10,11,12,13,14,15,16,17,18,19,20,21,22]
+
+    # initial_stake = [10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5120, 10240]
+    initial_stake = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 22,  23, 24, 25]
 
 
     # stakes = [10,10]
@@ -140,6 +133,9 @@ async def main_loop():
     aux_can_trade = ' '
     next_stk_indx = 0
     stale_element_counter = 0
+
+    # send_telegram_msg_2("Server is almost expired, going back to test mode")
+
 
     await send_telegram_msg('Server has started')
 
@@ -209,6 +205,7 @@ async def main_loop():
 
 
 
+
             print('---------------------2-------------------')
             print(f"The next index is {next_stk_indx}")
 
@@ -241,12 +238,24 @@ async def main_loop():
                     next_stk_indx = int(elements["curr_stk_indx"]) + 1
                     if(next_stk_indx > len(stakes)-1):
                         next_stk_indx = 0
-                    skip_until = datetime.now() + timedelta(seconds=300)  # Skip next 5 minutes
+                        exit()
+
                     last_win_time = False
                     last_loss_time = datetime.now()
                     aux_can_trade = True
                     print(f'There was a loss here going to index{next_stk_indx}')
-                    await send_telegram_msg(f"Balance = {get_money_balance(driver)}\n Profit = {db.get_results()}")
+
+                    
+                    with open("logs\\update_id.txt", "r") as file:
+                        update_id = int(file.read().strip()) # Read and convert to integer
+                        # tele_result = is_new_tele_cmd(update_id)
+                        # if(tele_result != False):
+                        print('sending pic to gc')
+                        highest_stake_index, count = db.get_highest_curr_stk_indx_and_count()
+                        await send_telegram_msg(f"Balance = {get_money_balance(driver)}     Profit = {float(get_money_balance(driver)) - float(18300)}")
+                        await screenshot_and_send_to_telegram(driver, None, f"Highest stake so far is {initial_stake[highest_stake_index]} \nHappened {count} times")
+
+              
                     
 
                 else:
@@ -286,7 +295,7 @@ async def main_loop():
 
 
 
-            latest_multiplier = get_multipliers(driver)[0]
+            latest_multiplier = get_multipliers(driver)
 
             # if (has_mins_passed(last_loss_time,300)==False):
             # # if float(latest_multiplier) < 2 and skip_until != None:
@@ -295,17 +304,21 @@ async def main_loop():
 
 
 # and float(latest_multiplier[0]) >
-            if((aux_can_trade == True) and (has_mins_passed(last_loss_time,300)==True) and (float(latest_multiplier[0]) > 2) ):
-                execute_trade(driver, initial_stake[next_stk_indx])
-                print('Auxilliary button clicked')
+            if((aux_can_trade == True) and (has_mins_passed(last_loss_time,60)==True) and (float(latest_multiplier[0]) > 2) ):
+                # execute_trade(driver, initial_stake[next_stk_indx])
+                click_bet_button(driver)
                 last_loss_time = datetime.now()
-
+                print('Auxilliary button clicked')
             
-            elif(aux_can_trade == False and (has_mins_passed(last_win_time,150)==True)):
-                execute_trade(driver, initial_stake[next_stk_indx])
+            elif(aux_can_trade == False and (has_mins_passed(last_win_time,30)==True)):
+                # execute_trade(driver, initial_stake[next_stk_indx])
+                click_bet_button(driver)
                 last_win_time = datetime.now()
-                
                 print('Auxilliary button clicked from staying too long')
+
+            else:
+                input_stake(driver, num=initial_stake[next_stk_indx])
+                make_sure_auto_close(driver)
 
         
 
