@@ -1,0 +1,75 @@
+fetch("https://www.sportybet.com/api/ng/pocket/v1/wallet/assetsInfo?_t=1779388974155", {
+  "headers": {
+    "accept": "*/*",
+    "accept-language": "en",
+    "clientid": "web",
+    "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+    "operid": "2",
+    "platform": "web",
+    "priority": "u=1, i",
+    "sec-ch-ua": "\"Chromium\";v=\"148\", \"Google Chrome\";v=\"148\", \"Not/A)Brand\";v=\"99\"",
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": "\"Windows\"",
+    "sec-fetch-dest": "empty",
+    "sec-fetch-mode": "same-origin",
+    "sec-fetch-site": "same-origin",
+    "user-metadata": "fbp=fb.1.1779373759784.85614951872290288.AQYAAQIB",
+    "cookie": "device-id=1ce00e76-02d5-4771-8089-c0e260d8329a; sb_country=ng; _gcl_au=1.1.492226297.1779373758; sb_fs_id=949e7a8a-267a-490a-81e0-439986b83b43; sb_fs_flag=false; _ga=GA1.1.2081742427.1779373760; _fbp=fb.1.1779373759784.85614951872290288.AQYAAQIB; deviceId=260521142951bdid28791947; userCert=350; userId=h230423135942puid99536245; selfExclusionType=; selfExclusionStartDate=0; selfExclusionEndDate=0; selfExclusionCooldown=false; phone=8151725194; reported-today-logged-in-visitor=1; country_changed=false; _ga_G1SLH060EL=GS2.1.s1779373761$o1$g0$t1779373869$j34$l0$h0; _ga_JBZRF0DWR6=GS2.1.s1779373760$o1$g1$t1779373916$j60$l0$h0; _ga_NBP9M63NMT=GS2.1.s1779375288$o1$g0$t1779375288$j60$l0$h0; locale=en; accessToken=patron:id:accesstoken:ac8431562df56a045b642c9112deb68529JF3mXwN0pAy8Ysl2WJRVWToYCMC775Z46ykUa1JBQRu8amUcDTemhNFTYmuyQ1a8ML/n5M/o51Ne5aUohOpg==; refreshToken=patron:id:refreshtoken:e8e51a92500b48168c9b62516dcddf86; _ga_B0FRZEXSQ2=GS2.1.s1779388690$o3$g0$t1779388690$j60$l0$h0; _ga_00HZ52K43N=GS2.1.s1779388704$o3$g1$t1779388972$j60$l0$h0; _ga_D9PX9RRZRJ=GS2.1.s1779388704$o3$g1$t1779388972$j60$l0$h0",
+    "Referer": "https://www.sportybet.com/ng/my_accounts/transactions"
+  },
+  "body": null,
+  "method": "GET"
+});
+
+
+fetch("https://www.sportybet.com/api/ng/pocket/v1/statements?type=0&pageSize=20&pageNo=1&createTimeStart=1778796000000&createTimeEnd=1779400799059&_t=1779388977419", {
+  "headers": {
+    "accept": "*/*",
+    "accept-language": "en",
+    "clientid": "web",
+    "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+    "operid": "2",
+    "platform": "web",
+    "priority": "u=1, i",
+    "sec-ch-ua": "\"Chromium\";v=\"148\", \"Google Chrome\";v=\"148\", \"Not/A)Brand\";v=\"99\"",
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": "\"Windows\"",
+    "sec-fetch-dest": "empty",
+    "sec-fetch-mode": "same-origin",
+    "sec-fetch-site": "same-origin",
+    "user-metadata": "metaPixelIds=3670019923273328&fbp=fb.1.1779373759784.85614951872290288.AQYAAQIB",
+    "cookie": "device-id=1ce00e76-02d5-4771-8089-c0e260d8329a; sb_country=ng; _gcl_au=1.1.492226297.1779373758; sb_fs_id=949e7a8a-267a-490a-81e0-439986b83b43; sb_fs_flag=false; _ga=GA1.1.2081742427.1779373760; _fbp=fb.1.1779373759784.85614951872290288.AQYAAQIB; deviceId=260521142951bdid28791947; userCert=350; userId=h230423135942puid99536245; selfExclusionType=; selfExclusionStartDate=0; selfExclusionEndDate=0; selfExclusionCooldown=false; phone=8151725194; reported-today-logged-in-visitor=1; country_changed=false; _ga_G1SLH060EL=GS2.1.s1779373761$o1$g0$t1779373869$j34$l0$h0; _ga_JBZRF0DWR6=GS2.1.s1779373760$o1$g1$t1779373916$j60$l0$h0; _ga_NBP9M63NMT=GS2.1.s1779375288$o1$g0$t1779375288$j60$l0$h0; locale=en; accessToken=patron:id:accesstoken:ac8431562df56a045b642c9112deb68529JF3mXwN0pAy8Ysl2WJRVWToYCMC775Z46ykUa1JBQRu8amUcDTemhNFTYmuyQ1a8ML/n5M/o51Ne5aUohOpg==; refreshToken=patron:id:refreshtoken:e8e51a92500b48168c9b62516dcddf86; _ga_B0FRZEXSQ2=GS2.1.s1779388690$o3$g0$t1779388690$j60$l0$h0; _ga_00HZ52K43N=GS2.1.s1779388704$o3$g1$t1779388976$j56$l0$h0; _ga_D9PX9RRZRJ=GS2.1.s1779388704$o3$g1$t1779388976$j56$l0$h0",
+    "Referer": "https://www.sportybet.com/ng/my_accounts/transactions"
+  },
+  "body": null,
+  "method": "GET"
+});
+
+
+
+use this selector to check for whether the website disconnected ---- app-disconnect-message .disconn-icon
+
+go to this link to login
+
+https://www.sportybet.com/ng/login
+
+phone input input[name="phone"]
+password input  input[type="password"]
+
+then submit button  button.af-button--primary
+
+then save my cookie and refuse it in making request to get statements and asset balance throughtout the lifecycle of the country_changed
+
+then go to https://www.sportybet.com/ng/sportygames/turbo-games/aviator
+
+then
+
+<div _ngcontent-wcd-c149="" class="controls"><div _ngcontent-wcd-c149="" class="controls-content-top"><!----><!----><div _ngcontent-wcd-c149="" class="navigation-wrapper"><app-navigation-switcher _ngcontent-wcd-c149="" class="navigation ng-untouched ng-valid ng-star-inserted ng-dirty" _nghost-wcd-c88=""><div _ngcontent-wcd-c88="" class="navigation-switcher"><button _ngcontent-wcd-c88="" tabindex="-1" class="tab ng-star-inserted active"> Bet </button><!----><button _ngcontent-wcd-c88="" tabindex="-1" class="tab ng-star-inserted"> Auto </button><!----><!----></div></app-navigation-switcher><!----><!----></div><div _ngcontent-wcd-c149="" class="first-row bet-game auto-game-feature"><div _ngcontent-wcd-c149="" class="bet-block"><app-spinner _ngcontent-wcd-c149="" class="spinner ng-untouched ng-valid ng-dirty" _nghost-wcd-c146=""><div _ngcontent-wcd-c146="" class="spinner big"><div _ngcontent-wcd-c146="" class="buttons"><button _ngcontent-wcd-c146="" type="button" class="minus ng-star-inserted"></button><!----></div><div _ngcontent-wcd-c146="" class="input"><input _ngcontent-wcd-c146="" inputmode="decimal" type="text" tabindex="-1" placeholder="10"></div><!----><div _ngcontent-wcd-c146="" class="buttons"><button _ngcontent-wcd-c146="" tabindex="-1" type="button" class="plus ng-star-inserted"></button><!----></div></div></app-spinner><div _ngcontent-wcd-c149="" class="bets-opt-list"><button _ngcontent-wcd-c149="" class="btn btn-secondary btn-sm bet-opt ng-star-inserted"><span _ngcontent-wcd-c149=""> 100 </span></button><button _ngcontent-wcd-c149="" class="btn btn-secondary btn-sm bet-opt ng-star-inserted"><span _ngcontent-wcd-c149=""> 200 </span></button><button _ngcontent-wcd-c149="" class="btn btn-secondary btn-sm bet-opt ng-star-inserted"><span _ngcontent-wcd-c149=""> 500 </span></button><button _ngcontent-wcd-c149="" class="btn btn-secondary btn-sm bet-opt ng-star-inserted"><span _ngcontent-wcd-c149=""> 1,000 </span></button><!----></div></div><div _ngcontent-wcd-c149="" class="buttons-block"><button _ngcontent-wcd-c149="" tabindex="-1" class="btn btn-success bet ng-star-inserted"><span _ngcontent-wcd-c149="" class="d-flex flex-column justify-content-center align-items-center"><label _ngcontent-wcd-c149="" class="label"><!----> Bet <!----><!----></label><label _ngcontent-wcd-c149="" class="amount"><span _ngcontent-wcd-c149="">50.00</span><span _ngcontent-wcd-c149="" class="currency"> NGN</span></label></span></button><!----><!----><!----><!----></div></div></div><div _ngcontent-wcd-c149="" class="w-100 border-line d-none"></div><div _ngcontent-wcd-c149="" class="controls-content-bottom"><div _ngcontent-wcd-c149="" class="second-row d-none"><div _ngcontent-wcd-c149="" class="auto-bet-wrapper"><div _ngcontent-wcd-c149="" class="auto-bet"><label _ngcontent-wcd-c149="" class="ng-star-inserted">Auto bet</label><app-ui-switcher _ngcontent-wcd-c149="" _nghost-wcd-c63="" class="ng-untouched ng-pristine ng-valid ng-star-inserted"><div _ngcontent-wcd-c63="" class="input-switch off"><span _ngcontent-wcd-c63="" class="oval"></span></div></app-ui-switcher><!----><!----><!----><!----></div></div><div _ngcontent-wcd-c149="" class="cashout-block"><div _ngcontent-wcd-c149="" class="cash-out-switcher"><label _ngcontent-wcd-c149=""> Auto Cash Out </label><app-ui-switcher _ngcontent-wcd-c149="" _nghost-wcd-c63="" class="ng-untouched ng-pristine ng-valid"><div _ngcontent-wcd-c63="" class="input-switch off"><span _ngcontent-wcd-c63="" class="oval"></span></div></app-ui-switcher></div><div _ngcontent-wcd-c149="" class="cashout-spinner-wrapper"><div _ngcontent-wcd-c149="" class="cashout-spinner disabled"><app-spinner _ngcontent-wcd-c149="" _nghost-wcd-c146="" class="ng-untouched ng-dirty"><div _ngcontent-wcd-c146="" class="spinner small"><div _ngcontent-wcd-c146="" class="buttons"><!----></div><div _ngcontent-wcd-c146="" class="input full-width"><input _ngcontent-wcd-c146="" inputmode="decimal" disabled="" type="text"></div><div _ngcontent-wcd-c146="" class="text icon-x disabled ng-star-inserted"></div><!----><div _ngcontent-wcd-c146="" class="buttons"><!----></div></div></app-spinner></div></div></div></div></div></div>
+
+
+set it to auto 
+then put a stake of 10 first
+then click the bet button 
+
+write the code for it
+

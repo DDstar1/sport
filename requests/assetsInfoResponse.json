@@ -1,0 +1,11 @@
+{
+    "bizCode": 10000,
+    "message": "Success",
+    "data": {
+        "balance": 755100,
+        "validGiftNum": 0,
+        "validGiftAmount": 0,
+        "coins": 0,
+        "auditStatus": 0
+    }
+}
