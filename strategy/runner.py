@@ -111,15 +111,8 @@ async def check_disconnect(page: Page) -> bool:
 
 # ── iframe helpers ────────────────────────────────────────────────────────────
 
-def _game_frame(page: Page):
-    return (
-        page.frame_locator(config.OUTER_IFRAME_SEL)
-            .frame_locator(config.INNER_IFRAME_SEL)
-    )
-
-
 def _inner_frame(page: Page):
-    """Return the actual Frame object (not FrameLocator) for JS evaluation."""
+    """Return the game Frame object, found by URL (works in both headless and visible mode)."""
     for f in page.frames:
         if "aviator-next" in f.url:
             return f
@@ -128,11 +121,24 @@ def _inner_frame(page: Page):
 
 async def wait_for_game(page: Page, timeout: int = 60_000) -> None:
     _log("Waiting for game to load...")
-    await (
-        _game_frame(page)
-        .locator(config.BET_BUTTON_SEL)
-        .first
-        .wait_for(state="visible", timeout=timeout)
+    deadline = time.time() + timeout / 1000
+    frame = None
+    while time.time() < deadline:
+        frame = _inner_frame(page)
+        if frame is not None:
+            break
+        await asyncio.sleep(1)
+    if frame is None:
+        raise RuntimeError("Game frame (aviator-next) never appeared")
+    # Poll via JS until the bet button is in the DOM and visible
+    await frame.wait_for_function(
+        """() => {
+            const btn = document.querySelector('button.btn-success.bet');
+            if (!btn) return false;
+            const s = window.getComputedStyle(btn);
+            return s.display !== 'none' && s.visibility !== 'hidden' && parseFloat(s.opacity) > 0;
+        }""",
+        timeout=int((deadline - time.time()) * 1000),
     )
     _log("Game loaded")
 
@@ -171,7 +177,7 @@ async def place_bet(page: Page, stake: float, cashout: float) -> int:
     _log("Auto panel visible")
 
     # 3. Set stake via Playwright locator (visible input)
-    stake_input = _game_frame(page).locator(config.BET_INPUT_SEL).first
+    stake_input = frame.locator(config.BET_INPUT_SEL).first
     await stake_input.click(click_count=3)
     await stake_input.fill(str(int(stake)))
     _log(f"Stake: {stake} NGN")
@@ -202,7 +208,7 @@ async def place_bet(page: Page, stake: float, cashout: float) -> int:
 
     # 6. Click Bet
     bet_time_ms = int(time.time() * 1000)
-    await _game_frame(page).locator(config.BET_BUTTON_SEL).first.click()
+    await frame.locator(config.BET_BUTTON_SEL).first.click()
     _log(f"Bet placed: {stake} NGN @ {cashout}x")
 
     return bet_time_ms
@@ -214,13 +220,36 @@ async def wait_for_outcome(context: BrowserContext, bet_time_ms: int) -> tuple[s
     """
     Poll statements until the round settles.
     Returns ('win', payout_ngn) or ('loss', 0.0).
+    Network failures pause the poll and wait for reconnection — never counted as loss.
     """
     our_order_id: str | None = None
     pb_found_at: float | None = None
+    network_fail_streak = 0
+    start_time = time.time()
+    last_status_log = 0.0
 
-    for _ in range(90):
+    while True:
         await asyncio.sleep(2)
-        stmts = await fetch_statements(context)
+
+        # Log progress every 15s so the user can see what we're waiting for
+        now = time.time()
+        if now - last_status_log >= 15:
+            if our_order_id is None:
+                _log(f"Waiting for bet to appear in statements... ({int(now - start_time)}s)")
+            else:
+                _log(f"Waiting for cashout (orderId={our_order_id})... ({int(now - pb_found_at)}s / 90s)")
+            last_status_log = now
+
+        try:
+            stmts = await fetch_statements(context)
+            network_fail_streak = 0
+        except Exception:
+            network_fail_streak += 1
+            if network_fail_streak >= 3:
+                _log("Network down during outcome poll — waiting for reconnection")
+                await wait_for_network()
+                network_fail_streak = 0
+            continue
 
         if our_order_id is None:
             for s in stmts:
@@ -229,6 +258,11 @@ async def wait_for_outcome(context: BrowserContext, bet_time_ms: int) -> tuple[s
                     pb_found_at = time.time()
                     _log(f"Bet confirmed — orderId={our_order_id}")
                     break
+
+            # If bet hasn't appeared in statements after 3 min, assume it didn't go through
+            if our_order_id is None and time.time() - start_time > 180:
+                _log("Bet never confirmed in statements after 3 min — treating as no-bet, retrying")
+                return "no-bet", 0.0
         else:
             for s in stmts:
                 if s.get("tradeCode") == "CB0001" and s.get("orderId") == our_order_id:
@@ -236,12 +270,10 @@ async def wait_for_outcome(context: BrowserContext, bet_time_ms: int) -> tuple[s
                     _log(f"WIN — payout={payout} NGN")
                     return "win", payout
 
-            if pb_found_at and time.time() - pb_found_at > 90:
+            # Only declare loss if network is healthy and 90s have passed with no CB0001
+            if time.time() - pb_found_at > 90:
                 _log(f"LOSS — no cashout for orderId={our_order_id}")
                 return "loss", 0.0
-
-    _log("Outcome timeout — treating as loss")
-    return "loss", 0.0
 
 
 # ── main loop ─────────────────────────────────────────────────────────────────
@@ -290,7 +322,14 @@ async def run() -> None:
         if not await load_cookies(context):
             await login(page, context)
 
-        balance = await fetch_balance(context)
+        # Verify session is still valid — re-login if cookies have expired
+        try:
+            balance = await fetch_balance(context)
+        except SessionExpired:
+            _log("Saved cookies expired — re-logging in")
+            await login(page, context)
+            balance = await fetch_balance(context)
+
         _log(f"Opening balance: {balance} NGN")
 
         await page.goto(config.GAME_URL)
@@ -321,7 +360,11 @@ async def run() -> None:
                     continue
 
                 outcome, payout = await wait_for_outcome(context, bet_time_ms)
-                balance = await fetch_balance(context)
+
+                try:
+                    balance = await fetch_balance(context)
+                except Exception:
+                    balance = None
 
                 insert_trade(
                     placed_at=datetime.fromtimestamp(bet_time_ms / 1000).isoformat(),
@@ -333,13 +376,16 @@ async def run() -> None:
                     consecutive_losses=consecutive_losses,
                 )
 
-                if outcome == "win":
+                if outcome == "no-bet":
+                    _log("Bet not confirmed — retrying without changing stake")
+                    await asyncio.sleep(5)
+                elif outcome == "win":
                     consecutive_losses = 0
-                    _log(f"WIN +{payout} NGN | balance={balance} NGN — waiting 10s")
-                    await asyncio.sleep(10)
+                    _log(f"WIN +{payout} NGN | balance={balance} NGN — waiting 5s")
+                    await asyncio.sleep(5)
                 else:
                     consecutive_losses += 1
-                    wait_secs = random.randint(5 * 60, 7 * 60)
+                    wait_secs = random.randint(2 * 60, 3 * 60)
                     mins, secs = divmod(wait_secs, 60)
                     _log(f"LOSS (consecutive={consecutive_losses}) | balance={balance} NGN — waiting {mins}m {secs}s")
                     await asyncio.sleep(wait_secs)
