@@ -278,10 +278,10 @@ async def wait_for_outcome(context: BrowserContext, bet_time_ms: int) -> tuple[s
 
 # ── main loop ─────────────────────────────────────────────────────────────────
 
-def _ask_headless() -> bool:
-    """Prompt the user at startup to choose headless or visible browser."""
+def _ask_hidden() -> bool:
+    """Ask whether to hide the browser window after launch."""
     while True:
-        ans = input("Run browser headless (hidden)? [y/n]: ").strip().lower()
+        ans = input("Hide browser window? [y/n]: ").strip().lower()
         if ans in ("y", "yes"):
             return True
         if ans in ("n", "no"):
@@ -289,17 +289,30 @@ def _ask_headless() -> bool:
         print("Please enter y or n.")
 
 
+async def _minimize_window(page: Page) -> None:
+    """Minimize the browser window via CDP (works even when minimized)."""
+    try:
+        cdp = await page.context.new_cdp_session(page)
+        info = await cdp.send("Browser.getWindowForTarget")
+        await cdp.send("Browser.setWindowBounds", {
+            "windowId": info["windowId"],
+            "bounds": {"windowState": "minimized"},
+        })
+        await cdp.detach()
+        _log("Browser window minimized")
+    except Exception as e:
+        _log(f"Could not minimize window: {e}")
+
+
 async def run() -> None:
     init_db()
-    headless = _ask_headless()
-    _log(f"Browser mode: {'headless' if headless else 'visible'}")
+    hide_window = _ask_hidden()
 
     async with async_playwright() as pw:
         browser = await pw.chromium.launch(
-            headless=headless,
+            headless=False,
             args=[
                 "--disable-blink-features=AutomationControlled",
-                "--use-gl=swiftshader",        # software WebGL renderer for headless
                 "--enable-webgl",
                 "--ignore-gpu-blocklist",
                 "--disable-web-security",
@@ -336,6 +349,9 @@ async def run() -> None:
         await page.wait_for_load_state("networkidle")
         _log("Navigated to Aviator")
         await wait_for_game(page)
+
+        if hide_window:
+            await _minimize_window(page)
 
         consecutive_losses = 0
 
